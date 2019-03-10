@@ -89,6 +89,7 @@ namespace LibDmd.DmdDevice
 			_config = new Configuration();
 			_altcolorPath = GetColorPath();
 
+			Logger.Info("Dmd Extensions 1.7.1+mjr20190310");
 			Logger.Info("Starting VPinMAME API through {0}.exe.", System.Diagnostics.Process.GetCurrentProcess().ProcessName);
 		}
 
