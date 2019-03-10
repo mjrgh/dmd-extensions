@@ -51,6 +51,9 @@ namespace LibDmd.DmdDevice
 			}
 			_parser = new FileIniDataParser();
 
+			Logger.Info("MJR 1.7.2 patch 20190309");
+			Logger.Info(" - fix for PinDMD shutdown crash (issue #169)");
+
 			try {
 				if (File.Exists(_iniPath)) {
 					_data = _parser.ReadFile(_iniPath);

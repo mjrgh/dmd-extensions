@@ -225,29 +225,35 @@ namespace LibDmd.Output.PinDmd3
 
 		public void RenderRaw(byte[] data)
 		{
-			//var start = DateTime.Now.Ticks;
-			//var lastFrame = start - _lastTick;
-			try {
-				_serialPort.Write(data, 0, data.Length);
-				_lastFrameFailed = false;
+			lock (locker)
+			{
+				if (_serialPort.IsOpen) {
+					//var start = DateTime.Now.Ticks;
+					//var lastFrame = start - _lastTick;
+					try
+					{
+						_serialPort.Write(data, 0, data.Length);
+						_lastFrameFailed = false;
 
-			} catch (Exception e) {
-				if (!_lastFrameFailed) {
-					Logger.Error("Error writing to serial port: {0}", e.Message);
-					_lastFrameFailed = true;
+					} catch (Exception e) {
+						if (!_lastFrameFailed) {
+							Logger.Error("Error writing to serial port: {0}", e.Message);
+							_lastFrameFailed = true;
+						}
+					}
+
+					/*var ticks = DateTime.Now.Ticks - start;
+					var seconds = (double)ticks / TimeSpan.TicksPerSecond;
+					Logger.Debug("{0}ms for {1} bytes ({2} baud), {3}ms ({4} fps)",
+						Math.Round((double)ticks / TimeSpan.TicksPerMillisecond * 1000) / 1000,
+						data.Length,
+						(double)data.Length * 8 / seconds,
+						Math.Round((double)lastFrame / TimeSpan.TicksPerMillisecond * 1000) / 1000,
+						Math.Round((double)TimeSpan.TicksPerSecond / lastFrame * 1000) / 1000
+						);
+					_lastTick = start;*/
 				}
 			}
-
-			/*var ticks = DateTime.Now.Ticks - start;
-			var seconds = (double)ticks / TimeSpan.TicksPerSecond;
-			Logger.Debug("{0}ms for {1} bytes ({2} baud), {3}ms ({4} fps)", 
-				Math.Round((double)ticks / TimeSpan.TicksPerMillisecond * 1000) / 1000, 
-				data.Length, 
-				(double)data.Length * 8 / seconds,
-				Math.Round((double)lastFrame / TimeSpan.TicksPerMillisecond * 1000) / 1000, 
-				Math.Round((double)TimeSpan.TicksPerSecond / lastFrame * 1000) / 1000
-				);
-			_lastTick = start;*/
 		}
 
 		public void ClearDisplay()
@@ -324,9 +330,15 @@ namespace LibDmd.Output.PinDmd3
 
 		public void Dispose()
 		{
-			if (_serialPort.IsOpen) {
-				_serialPort.Close();
+			lock (locker) {
+				if (_serialPort.IsOpen) {
+					_serialPort.Close();
+				}
 			}
 		}
+
+		// lock, to protect against closing the serial port while the render
+		// thread is in the middle of a write
+		object locker = new object();
 	}
 }
